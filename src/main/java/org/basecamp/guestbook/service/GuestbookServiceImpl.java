@@ -14,6 +14,7 @@ import org.basecamp.guestbook.entity.Guestbook;
 import org.basecamp.guestbook.dto.GuestbookDTO;
 import org.basecamp.guestbook.repository.GuestbookRepository;
 
+import java.util.Optional;
 import java.util.function.Function;
 
 
@@ -48,6 +49,12 @@ public class GuestbookServiceImpl implements  GuestbookService{
         Function<Guestbook, GuestbookDTO> fn = (entity -> entityToDto(entity));
 
         return new PageResultDTO<>(result, fn);
+    }
+
+    public GuestbookDTO read(Long gno){
+        Optional<Guestbook> result = repository.findById(gno);
+
+        return result.isPresent()? entityToDto(result.get()): null; //get이 Optional에서 Guestbook entity로 변환시켜줌
     }
 
 }
