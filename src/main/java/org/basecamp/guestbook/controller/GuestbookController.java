@@ -16,10 +16,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 @RequestMapping("/guestbook")
 @Log4j2
-@RequiredArgsConstructor
 public class GuestbookController {
-
-    private final GuestbookService service;
 
     private final GuestbookService service;
 
