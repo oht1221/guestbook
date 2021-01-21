@@ -1,10 +1,13 @@
 package org.basecamp.guestbook.service;
 
+import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
 import org.basecamp.guestbook.dto.PageRequestDTO;
 import org.basecamp.guestbook.dto.PageResultDTO;
+import org.basecamp.guestbook.entity.QGuestbook;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -44,7 +47,9 @@ public class GuestbookServiceImpl implements  GuestbookService{
 
         Pageable pageable = requestDTO.getPageable(Sort.by("gno").descending());
 
-        Page<Guestbook> result = repository.findAll(pageable);
+        BooleanBuilder booleanBuilder = getSearch(requestDTO);
+
+        Page<Guestbook> result = repository.findAll(booleanBuilder, pageable);
 
         Function<Guestbook, GuestbookDTO> fn = (entity -> entityToDto(entity));
 
@@ -57,4 +62,59 @@ public class GuestbookServiceImpl implements  GuestbookService{
         return result.isPresent()? entityToDto(result.get()): null; //get이 Optional에서 Guestbook entity로 변환시켜줌
     }
 
+    public void remove(Long gno){
+
+        repository.deleteById(gno);
+
+    }
+
+    public void modify(GuestbookDTO dto){
+
+        Optional<Guestbook> result = repository.findById(dto.getGno());
+
+        if(result.isPresent()){
+
+            Guestbook entity= result.get();
+
+            entity.changeTitle(dto.getTitle());
+            entity.changeContent(dto.getContent());
+
+            repository.save(entity);
+        }
+    }
+
+    private BooleanBuilder getSearch(PageRequestDTO requestDTO){
+
+        String type = requestDTO.getType();
+
+        BooleanBuilder booleanBuilder = new BooleanBuilder();
+
+        QGuestbook qGuestbook = QGuestbook.guestbook;
+
+        String keyword = requestDTO.getKeyword();
+
+        BooleanExpression expression = qGuestbook.gno.gt(0L);
+
+        booleanBuilder.and(expression);
+
+        if(type == null || type.trim().length() == 0){ // 검색 조건 없음
+            return booleanBuilder;
+        }
+
+        BooleanBuilder conditionBuilder = new BooleanBuilder();
+        //조건 생성
+        if(type.contains("t")){
+            conditionBuilder.or(qGuestbook.title.contains(keyword));
+        }
+        if(type.contains("c")){
+            conditionBuilder.or(qGuestbook.content.contains(keyword));
+        }
+        if(type.contains("w")){
+            conditionBuilder.or(qGuestbook.content.contains(keyword));
+        }
+
+        booleanBuilder.and(conditionBuilder);
+
+        return booleanBuilder;
+    }
 }
