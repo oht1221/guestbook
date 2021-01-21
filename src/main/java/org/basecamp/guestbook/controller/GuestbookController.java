@@ -48,7 +48,7 @@ public class GuestbookController {
 
         redirectAttributes.addFlashAttribute("msg", gno);
 
-        return "redirect:/guestbook/list";
+        return "redirect:/guestbook/list"; 
     }
 
 }
